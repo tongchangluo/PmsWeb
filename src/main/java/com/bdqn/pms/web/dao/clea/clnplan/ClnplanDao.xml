@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bdqn.pms.web.dao.clea.clnplan.ClnplanDao">
+    <resultMap type="CleanPlan" id="cleanPlanId">
+        <id property="clnplan_id" column="clnplan_id"/>
+		<result property="clnplan_no" column="clnplan_no"/>
+		<result property="clnplan_name" column="clnplan_name"/>
+		<result property="clnplan_place" column="clnplan_place"/>
+		<result property="clnplan_charge" column="clnplan_charge"/>
+		<result property="clnplan_date" column="clnplan_date"/>
+		<result property="clnplan_del" column="clnplan_del"/>
+		<result property="clnplan_remark" column="clnplan_remark"/>
+		<result property="clnplan_summary" column="clnplan_summary"/>
+		<result property="clnplan_addDate" column="clnplan_addDate"/>
+        <association property="landdevCompany" javaType="LanddevCompany" resultMap="landdevCompanyId" />
+    </resultMap>
+    <resultMap type="LanddevCompany" id="landdevCompanyId">
+        <id property="ldcId" column="ldcId"/>
+        <result property="ldcName" column="ldcName"/>
+        <result property="ldcPid" column="ldcPid"/>
+    </resultMap>
+   
+    <select id="conutClnplan" resultType="int">
+        SELECT COUNT(*) FROM db_pms_clnplan WHERE clnplan_del=0
+        <if test="clnplan_name != null and clnplan_name != ''"> and clnplan_name like CONCAT('%',#{clnplan_name},'%')</if>
+        <if test="clnplan_no != null and clnplan_no != ''"> and clnplan_no like CONCAT('%',#{clnplan_no},'%')</if>
+        <if test="clnplan_place != null and clnplan_place != ''"> and clnplan_place like CONCAT('%',#{clnplan_place},'%')</if>
+        <if test="clnplan_charge != null and clnplan_charge != ''"> and clnplan_charge like CONCAT('%',#{clnplan_charge},'%')</if>
+    </select>
+    
+    <!-- 根据查询条件获得清洁安排 -->
+    <select id="getClnplanListByQuery" resultMap="cleanPlanId">
+        SELECT p.*,l.* FROM db_pms_clnplan p,tb_landdevcompany l WHERE p.`clnplan_companyId`=l.`ldcId` AND clnplan_del=0
+        <if test="clnplan_name != null and clnplan_name != ''"> and p.clnplan_name like CONCAT('%',#{clnplan_name},'%')</if>
+        <if test="clnplan_no != null and clnplan_no != ''"> and p.clnplan_no like CONCAT('%',#{clnplan_no},'%')</if>
+        <if test="clnplan_place != null and clnplan_place != ''"> and p.clnplan_place like CONCAT('%',#{clnplan_place},'%')</if>
+        <if test="clnplan_charge != null and clnplan_charge != ''"> and p.clnplan_charge like CONCAT('%',#{clnplan_charge},'%')</if>
+       ORDER BY p.`clnplan_addDate` DESC LIMIT #{startRow},#{pageSize}
+    </select>
+    
+    <!-- 查询任务安排 -->
+    <select id="getClnplanListByldc" resultType="CleanPlan">
+        SELECT * FROM db_pms_clnplan 
+		WHERE clnplan_companyId = #{ldcId}
+		ORDER BY clnplan_addDate DESC
+    </select>
+    
+    <!-- 根据清洁安排id查询出对应信息 -->
+    <select id="getClnplan" resultType="CleanPlan">
+        SELECT clnplan_id,clnplan_name,clnplan_place,clnplan_charge FROM db_pms_clnplan 
+		WHERE clnplan_id=#{clnplanId}
+    </select>
+    
+    <!-- 查询是否已存在 -->
+    <select id="isExist" resultType="int">
+        SELECT COUNT(*) FROM db_pms_clnplan WHERE clnplan_no=#{clnplan_no}
+		<if test="clnplan_id != null and clnplan_id != ''">AND clnplan_id != #{clnplan_id}</if>
+    </select>
+    
+    <!-- 修改清洁安排 -->
+    <update id="updateCleanPlan" parameterType="CleanPlan">
+         UPDATE db_pms_clnplan SET
+         clnplan_no = #{clnplan_no},
+         clnplan_name = #{clnplan_name},
+         clnplan_place= #{clnplan_place},
+         clnplan_charge = #{clnplan_charge},
+         clnplan_date = #{clnplan_date},
+         clnplan_remark = #{clnplan_remark},
+         clnplan_summary = #{clnplan_summary},
+         clnplan_companyId = #{landdevCompany.ldcId}
+         WHERE clnplan_id = #{clnplan_id}
+    </update>
+    
+    <select id="getClnplanByPlanNo" resultMap="cleanPlanId">
+       SELECT l.*,p.* FROM db_pms_clnplan p,tb_landdevcompany l 
+       WHERE l.`ldcId`=p.`clnplan_companyId` 
+       AND p.clnplan_no=#{clnplanNo}
+    </select>
+    
+    
+    
+    <!-- 删除清洁安排 -->
+    <update id="delCleanplan" parameterType="java.util.ArrayList">
+        UPDATE db_pms_clnplan SET clnplan_del=1 WHERE clnplan_no IN
+        <foreach collection="array" item="clnplanNo" index="i" open="(" close=")" separator=",">
+              #{clnplanNo}
+        </foreach>
+    </update>
+    
+    <!-- 查询公司 -->
+    <select id="getldcompany" resultMap="landdevCompanyId">
+        SELECT * FROM tb_landdevcompany WHERE ldcpid!=0
+    </select>
+    <!-- 新增清洁安排 -->
+    	<!-- 新增清洁安排 -->
+    <insert id="addCleanPlan" parameterType="CleanPlan">
+        INSERT INTO db_pms_clnplan(clnplan_no, clnplan_name, clnplan_place, clnplan_charge, 
+		clnplan_date, clnplan_companyId,clnplan_remark,clnplan_summary)
+		VALUE(#{clnplan_no}, #{clnplan_name}, #{clnplan_place}, #{clnplan_charge}, 
+		#{clnplan_date}, #{landdevCompany.ldcId},#{clnplan_remark},#{clnplan_summary})
+    </insert>
+</mapper>

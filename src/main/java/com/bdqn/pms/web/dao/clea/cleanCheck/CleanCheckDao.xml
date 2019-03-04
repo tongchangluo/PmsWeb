@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding ="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-..mybaits.org//dtd mapper 3.0//EN"
+                "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bdqn.pms.web.dao.clea.cleanCheck.CleanCheckDao">
+    <select id="getCleanCheckRecordList" resultMap="cleanCheckRecordList">
+        select tldc.ldcId,tldc.ldcName,c.* from tb_landdevcompany as tldc,db_pms_cleanck as c where c.cleanck_companyId=tldc.ldcId and c.cleanck_del=0
+        <trim prefix="and">
+            <if test="colmunName!=null and colmunValue!=null">
+                ${colmunName}=${colmunValue}
+            </if>
+        </trim>
+        order by cleanck_addDate DESC limit #{from},#{pageSize}
+    </select>
+    <resultMap id="cleanCheckRecordList" type="CleanCheck">
+        <id property="cleanck_id" column="cleanck_id"/>
+        <result property="cleanck_place" column="cleanck_place"/>
+        <result property="cleanck_date" column="cleanck_date" />
+        <result property="cleanck_cleaner" column="cleanck_cleaner"/>
+        <result property="cleanck_rummager" column="cleanck_rummager"/>
+        <result property="cleanck_situation" column="cleanck_situation"/>
+        <result property="cleanck_del" column="cleanck_del"/>
+        <result property="cleanck_remark" column="cleanck_remark"/>
+        <association property="landdevCompany" javaType="LanddevCompany">
+            <id property="ldcId" column="ldcId"/>
+            <result property="ldcName" column="ldcName"/>
+        </association>
+    </resultMap>
+    <select id="getCleanCheckTotalCount" resultType="long">
+        select count(*) from db_pms_cleanck where cleanck_del=0
+        <trim prefix="and" >
+            <if test="colmunName!=null and colmunValue!=null ">
+                ${colmunName}=${colmunValue}
+            </if>
+        </trim>
+    </select>
+    <insert id="addCleanCheckRecord">
+        insert into db_pms_cleanck (cleanck_place,cleanck_date,cleanck_cleaner,cleanck_rummager,cleanck_situation,cleanck_addDate,cleanck_del,cleanck_companyId,cleanck_remark)values(#{cleanCheckPlace},#{cleanCheckDate},#{cleanCheckCleaner},#{cleanCheckRummager},#{cleanCheckSituation},#{cleanCheckAddDate},#{cleanCheckDel},#{companyId},#{cleanCheckRemark})
+    </insert>
+    <update id="deleteCleanCheckRecord">
+        update db_pms_cleanck set cleanck_del=1 where cleanck_id=#{cleanCheckId}
+    </update>
+    <update id="updateCleanCheck">
+        update db_pms_cleanck set cleanck_place=#{cleanCheckPlace},cleanck_date=#{cleanCheckDate},cleanck_cleaner=#{cleanCheckCleaner},cleanck_rummager=#{cleanCheckRummager},cleanck_situation=#{cleanCheckSituation},cleanck_companyId=#{companyId},cleanck_remark=#{cleanCheckRemark} where cleanck_id=#{cleanCheckId}
+    </update>
+    <select id="getCleanCheckByCleanCheckId" resultMap="theSingleCleanCheck">
+        select tldc.ldcId,tldc.ldcName,c.* from tb_landdevcompany as tldc,db_pms_cleanck as c where c.cleanck_companyId=tldc.ldcId and c.cleanck_del=0 and c.cleanck_id=#{cleanCheckId}
+    </select>
+    <resultMap id="theSingleCleanCheck" type="CleanCheck">
+        <id property="cleanck_id" column="cleanck_id"/>
+        <result property="cleanck_place" column="cleanck_place"/>
+        <result property="cleanck_date" column="cleanck_date" />
+        <result property="cleanck_cleaner" column="cleanck_cleaner"/>
+        <result property="cleanck_rummager" column="cleanck_rummager"/>
+        <result property="cleanck_situation" column="cleanck_situation"/>
+        <result property="cleanck_del" column="cleanck_del"/>
+        <result property="cleanck_remark" column="cleanck_remark"/>
+        <association property="landdevCompany" javaType="LanddevCompany">
+            <id property="ldcId" column="ldcId"/>
+            <result property="ldcName" column="ldcName"/>
+        </association>
+    </resultMap>
+</mapper>

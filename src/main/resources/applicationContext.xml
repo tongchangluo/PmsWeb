@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.0.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/task
+   		http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		http://code.alibabatech.com/schema/dubbo        
+		http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+	<!-- 引入参数配置属性文件 -->
+	<context:property-placeholder location="classpath:mysqldb.properties"/>
+	<!-- 1 配置数据源-采用C3P0  -->
+	<bean id="dataSource" destroy-method="close" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="user"  value="${user}"/>
+		<property name="password" value="${password}"/>
+		<property name="jdbcUrl" value="${url}"/>
+		<property name="driverClass" value="${driverClass}"/>
+		
+		<property name="initialPoolSize" value="${c3p0.initialPoolSize}"/>    
+    	<property name="maxIdleTime" value="${c3p0.maxIdleTime}"/>    
+    	<property name="maxPoolSize" value="${c3p0.maxPoolSize}"/>    
+    	<property name="minPoolSize" value="${c3p0.minPoolSize}"/> 
+	</bean>
+	
+	<!-- 2 配置SqlSessionFactoryBean对象-->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:mybatis-config.xml"/>
+	</bean>
+	
+	<!-- 3 配置事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<!-- 4 声明式事务-->
+	<tx:advice id="advice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" propagation="REQUIRED"/>
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut expression="execution(* com.bdqn.pms.web.service..*.*(..))" id="pointcut"/>
+		<aop:advisor advice-ref="advice" pointcut-ref="pointcut"/>
+	</aop:config>
+	
+	<!-- 5 配置dao映射器 -->		
+	<!-- SqlSessionTemplate:spring提供的SqlSession工具 -->
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory"/>
+	</bean>	
+		  
+    <!--使用MapperScannerConfigurer注入映射器,也不需要编写接口实现类-StudentDaoImpl
+    	service bean 则采用autowire="byType"-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.bdqn.pms.web.dao" />
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/> 
+    </bean>
+    
+	 <!-- 6 加载注解service -->	
+     <context:component-scan base-package="com.bdqn.pms.web.service"/>
+</beans>

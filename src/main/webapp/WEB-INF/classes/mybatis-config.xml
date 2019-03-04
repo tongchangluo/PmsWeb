@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    
+    <!-- <settings>
+		<setting name="autoMappingBehavior" value="FULL" />
+	</settings> -->
+    
+	<!-- 配置对象的短名(别名) -->
+	<typeAliases>
+		<package name="com.bdqn.pms.web.po"/>
+	</typeAliases>
+</configuration>
+

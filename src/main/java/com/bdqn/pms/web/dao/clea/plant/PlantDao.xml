@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding ="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-..mybaits.org//dtd cn.bdqn201815pms.pojo.mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bdqn.pms.web.dao.clea.plant.PlantDao">
+    <select id="getPlantList" resultMap="plantList">
+        select tldc.ldcId,tldc.ldcName,p.* from db_pms_plant as p,tb_landdevcompany as tldc where p.plant_companyId=tldc.ldcId and p.plant_del=0
+        <trim prefix="and" >
+            <if test="colmunName!=null and colmunValue!=null ">
+                ${colmunName}=${colmunValue}
+            </if>
+        </trim>
+        order by plant_addDate DESC limit #{from},#{pageSize}
+    </select>
+    <resultMap id="plantList" type="Plant">
+        <id property="plant_id" column="plant_id"/>
+        <result property="plant_name" column="plant_name"/>
+        <result property="plant_type" column="plant_type"/>
+        <result property="plant_age" column="plant_age"/>
+        <result property="plant_quantity" column="plant_quantity"/>
+        <result property="plant_unit" column="plant_unit"/>
+        <result property="plant_no" column="plant_no"/>
+        <result property="plant_del" column="plant_del"/>
+        <result property="plant_habit" column="plant_habit"/>
+        <result property="plant_character" column="plant_character"/>
+        <result property="plant_remark" column="plant_remark"/>
+        <association property="landdevCompany" javaType="LanddevCompany">
+            <id property="ldcId" column="ldcId"/>
+            <result property="ldcName" column="ldcName"/>
+        </association>
+    </resultMap>
+    <select id="getPlantTotalCount" resultType="long">
+        select count(*) from db_pms_plant where plant_del=0
+        <trim prefix="and" >
+            <if test="colmunName!=null and colmunValue!=null ">
+                ${colmunName} = ${colmunValue}
+            </if>
+        </trim>
+    </select>
+    <insert id="addPlant">
+        insert into db_pms_plant (plant_name,plant_type,plant_age,plant_quantity,plant_unit,plant_addDate,plant_no,plant_del,plant_companyId,plant_remark,plant_character,plant_habit) values(#{plantName},#{plantType},#{plantAge},#{plantQuantity},#{plantUnit},#{plantAddDate},#{plantNo},#{plantDel},#{companyId},#{plantRemark},#{plantCharacter},#{plantHabit})
+    </insert>
+    <select id="checkIsThePlantUsing" parameterType="integer" resultType="integer">
+        select count(*) from db_pms_plant where plant_used=1 and plant_id=#{plantId}
+    </select>
+    <update id="deletePlant">
+        update db_pms_plant set plant_del=1 where plant_id=#{plantId} and plant_used=0;
+    </update>
+    <select id="checkIsThePlantNoOfTheSpecifedPlantNoRepeat" resultType="integer">
+        select count(*) from db_pms_plant where plant_id!=#{plantId} and plant_no=#{plantNo}
+    </select>
+    <select id="checkIsThePlantNoRepeat" resultType="integer">
+        select count(*) from db_pms_plant where plant_no=#{plantNo}
+    </select>
+    <update id="updatePlant">
+        update db_pms_plant set plant_name=#{plantName},plant_type=#{plantType},plant_age=#{plantAge},plant_quantity=#{plantQuantity},plant_unit=#{plantUnit},plant_no=#{plantNo},plant_companyId=#{companyId},plant_remark=#{companyId},plant_character=#{plantCharacter},plant_habit=#{plantHabit} where plant_id=#{plantId}
+    </update>
+    <select id="getPlantByPlantId" parameterType="integer" resultMap="theSinglePlant">
+        select tldc.ldcId,tldc.ldcName,p.* from db_pms_plant as p,tb_landdevcompany as tldc where p.plant_companyId=tldc.ldcId and p.plant_del=0 and p.plant_id=#{plantId}
+    </select>
+    <resultMap id="theSinglePlant" type="Plant">
+        <id property="plant_id" column="plant_id"/>
+        <result property="plant_name" column="plant_name"/>
+        <result property="plant_type" column="plant_type"/>
+        <result property="plant_age" column="plant_age"/>
+        <result property="plant_quantity" column="plant_quantity"/>
+        <result property="plant_unit" column="plant_unit"/>
+        <result property="plant_no" column="plant_no"/>
+        <result property="plant_del" column="plant_del"/>
+        <result property="plant_habit" column="plant_habit"/>
+        <result property="plant_character" column="plant_character"/>
+        <result property="plant_remark" column="plant_remark"/>
+        <association property="landdevCompany" javaType="LanddevCompany">
+            <id property="ldcId" column="ldcId"/>
+            <result property="ldcName" column="ldcName"/>
+        </association>
+    </resultMap>
+		<!-- 查询所有植被 -->
+	<select id="getAll" resultType="Plant">
+		select * from db_pms_plant where plant_del=0
+	
+	</select>
+	
+	<!-- 获取绿化设置中的主要植被信息 -->
+	<select id="plantSeted" resultType="Plant" >
+		select * from db_pms_plant where plant_id in
+		<choose>
+			<when test="_parameter == null or _parameter ==''">
+				('null')
+			</when>
+			<otherwise>
+				(${_parameter})
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 查询未使用的植被 -->
+	<select id="getNotUsed" resultType="Plant">
+		select * from db_pms_plant where plant_used = 0 and plant_del=0
+	</select>
+	
+	<!-- 更新植被信息 -->
+	<update id="setUsed" parameterType="list">
+		update db_pms_plant 
+		set
+	  	<!-- plant_name = #{plant_name}
+	
+	 	plant_type = #{plant_type}
+	  
+	  	plant_age = #{plant_age}
+	  
+	 	plant_quantity = #{plant_quantity}
+	  
+	  	plant_unit = #{plant_unit}
+	  
+	  	plant_no = #{plant_no}
+	  
+	  	plant_del = #{plant_del}
+	  
+	  	plant_companyId = #{landdevCompany.ldcId}
+	 
+	  	plant_remark = #{plant_remark}
+	  
+	  	plant_character = #{plant_character}
+	 
+	  	plant_habit = #{plant_habit} -->
+	
+	  	plant_used = 1
+		  	
+		where plant_id in 
+		<foreach collection="plantset_types" item="plant" separator="," open="(" close=")">
+			${plant.plant_id}
+		</foreach>
+	</update>
+	
+	<update id="modifyPlantUsed">
+		<if test="usedId!=null and usedId.size()>0">
+			update db_pms_plant
+			set
+			plant_used = 1
+			where
+			plant_id
+			<trim prefix="in">
+				<foreach collection="usedId" item="udId" open="(" close=")" separator=",">
+					${udId}
+				</foreach>
+			</trim>
+			;
+		</if>
+		<if test="notUsedId!=null and notUsedId.size()>0">
+			update db_pms_plant
+			set
+			plant_used = 0
+			where
+			plant_id
+			<trim prefix="in">
+					<foreach collection="notUsedId" item="nUdId" open="(" close=")" separator=",">
+						${nUdId}
+					</foreach>
+			</trim>
+		</if>
+	</update>
+</mapper>

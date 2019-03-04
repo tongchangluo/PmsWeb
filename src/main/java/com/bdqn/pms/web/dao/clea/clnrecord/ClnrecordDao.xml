@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.bdqn.pms.web.dao.clea.clnrecord.ClnrecordDao">
+    <resultMap type="CleanRecord" id="cleanRecordId">
+        <id property="clnrecord_id" column="clnrecord_id"/>
+        <result property="clnrecord_cleaner" column="clnrecord_cleaner"/>
+        <result property="clnrecord_date" column="clnrecord_date"/>
+        <result property="clnrecord_situation" column="clnrecord_situation"/>
+        <result property="clnrecord_remark" column="clnrecord_remark"/>
+        <result property="clnrecord_del" column="clnrecord_del"/>
+        <result property="clnrecord_addDate" column="clnrecord_addDate"/>       
+        <association property="landdevCompany" javaType="LanddevCompany" resultMap="landdevCompanyId" />
+        <association property="cleanPlan" javaType="CleanPlan" resultMap="cleanPlanId" />
+    </resultMap>
+    <resultMap type="LanddevCompany" id="landdevCompanyId">
+        <id property="ldcId" column="ldcId"/>
+        <result property="ldcName" column="ldcName"/>
+        <result property="ldcPid" column="ldcPid"/>
+    </resultMap>
+    <resultMap type="CleanPlan" id="cleanPlanId">
+        <id property="clnplan_id" column="clnplan_id"/>
+        <result property="clnplan_no" column="clnplan_no"/>
+        <result property="clnplan_name" column="clnplan_name"/>
+        <result property="clnplan_place" column="clnplan_place"/>
+    </resultMap>
+    <!-- 查询共有多少条记录 -->
+    <select id="conutClnrecord" resultType="int">
+        SELECT COUNT(*) FROM db_pms_clnrecord r,db_pms_clnplan p
+         WHERE p.`clnplan_id`=r.clnrecord_clnplanId  
+         AND  r.clnrecord_del=0
+        <if test="clnplan_no != null and clnplan_no != ''"> and p.clnplan_no like CONCAT('%',#{clnplan_no},'%')</if>
+        <if test="clnplan_name != null and clnplan_name != ''"> and p.clnplan_name like CONCAT('%',#{clnplan_name},'%')</if>
+        <if test="clnplan_place != null and clnplan_place != ''"> and p.clnplan_place like CONCAT('%',#{clnplan_place},'%')</if>
+        <if test="clnrecord_cleaner != null and clnrecord_cleaner != ''"> and r.clnrecord_cleaner like CONCAT('%',#{clnrecord_cleaner},'%')</if>
+ 	</select>
+    
+    <!-- 根据条件查询 -->
+    <select id="getcleanRecordByQuery" resultMap="cleanRecordId">
+        SELECT r.`clnrecord_id`,r.`clnrecord_date`,r.`clnrecord_cleaner`,
+        r.`clnrecord_situation`,p.clnplan_name,p.clnplan_no,p.clnplan_place,
+        l.ldcName FROM db_pms_clnrecord r,db_pms_clnplan p,tb_landdevcompany l
+        WHERE p.`clnplan_id`=r.`clnrecord_clnplanId` 
+		 AND r.`clnrecord_companyId`=l.`ldcId` AND r.`clnrecord_del`=0
+        <if test="clnplan_no != null and clnplan_no != ''"> and p.clnplan_no like CONCAT('%',#{clnplan_no},'%')</if>
+        <if test="clnplan_name != null and clnplan_name != ''"> and p.clnplan_name like CONCAT('%',#{clnplan_name},'%')</if>
+        <if test="clnplan_place != null and clnplan_place != ''"> and p.clnplan_place like CONCAT('%',#{clnplan_place},'%')</if>
+        <if test="clnrecord_cleaner != null and clnrecord_cleaner != ''"> and r.`clnrecord_cleaner` like CONCAT('%',#{clnrecord_cleaner},'%')</if>
+   		ORDER BY r.`clnrecord_addDate` DESC LIMIT #{startRow},#{pageSize}
+     </select>
+    
+    <!-- 根据清洁安排查询是否存在清洁记录 -->
+    <select id="getRecordByClnplanNo" resultType="String">
+         SELECT p.clnplan_no FROM db_pms_clnrecord r,db_pms_clnplan p 
+         WHERE r.clnrecord_clnplanId=p.clnplan_id AND
+         p.clnplan_no IN
+		 <foreach collection="array" item="clnplanNo" index="i" open="(" close=")" separator=",">
+              #{clnplanNo}
+        </foreach>
+  		 GROUP BY clnplan_no
+    </select>
+    
+    
+    <!-- 删除 -->
+     <update id="delcleanRecord" parameterType="java.util.ArrayList">
+        UPDATE db_pms_clnrecord SET clnrecord_del=1 WHERE clnrecord_id IN
+        <foreach collection="array" item="clnrecordId" index="i" open="(" close=")" separator=",">
+              #{clnrecordId}
+        </foreach>
+    </update>
+    <!-- 修改 -->
+    <update id="updatecleanRecord">
+         UPDATE db_pms_clnrecord SET
+         clnrecord_cleaner = #{clnrecord_cleaner},
+         clnrecord_companyId = #{clnrecord_companyId},
+         clnrecord_situation = #{clnrecord_situation},
+         clnrecord_remark = #{clnrecord_remark},
+         clnrecord_clnplanId=#{cleanPlan.clnplan_id},
+         clnrecord_date=#{clnrecord_date}
+         WHERE clnrecord_id = #{clnrecord_id}
+    </update>
+    
+    <!-- 根据id查询出相应信息，修改页面显示 -->
+    <select id="getClnrecordById" resultMap="cleanRecordId">
+         SELECT r.*,p.clnplan_name,p.*,
+        l.* FROM db_pms_clnrecord r,db_pms_clnplan p,tb_landdevcompany l
+        WHERE p.`clnplan_id`=r.`clnrecord_clnplanId` 
+		 AND r.`clnrecord_companyId`=l.`ldcId` AND r.`clnrecord_del`=0
+		 AND r.`clnrecord_id`=#{clnrecordId}
+    </select>
+    
+    
+    
+    <!-- 新增 -->
+    <!-- 新增清洁安排 -->
+    <insert id="addClnRecord">
+        INSERT INTO db_pms_clnrecord(clnrecord_companyId,clnrecord_clnplanId,clnrecord_cleaner, clnrecord_date, clnrecord_situation, clnrecord_remark)
+		VALUE(#{landdevCompany.ldcId},#{cleanPlan.clnplan_id}, #{clnrecord_cleaner},#{clnrecord_date}, #{clnrecord_situation}, #{clnrecord_remark})
+    </insert>
+    
+</mapper>

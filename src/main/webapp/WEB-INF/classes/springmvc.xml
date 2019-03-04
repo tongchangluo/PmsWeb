@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-4.0.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/task
+   		http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		http://code.alibabatech.com/schema/dubbo        
+		http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+	 
+     <!--基于注解 //////// -->
+     <!--1 扫描器 -->
+     <context:component-scan base-package="com.bdqn.pms.web.controller"/>  
+     <!--2  通过注解驱动配置代替以上配置：用来代替处理器映射器、适配器的配置 -->
+     <mvc:annotation-driven conversion-service="conversionService">
+     	<!-- 装配消息转换器StringHttpMessageConverter，设置字符编码为UTF-8，一次配置，永久搞定 -->
+     	<mvc:message-converters>
+     		<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+     			<property name="supportedMediaTypes">
+     				<list>
+     					<value>application/json;charset=utf-8</value>
+     				</list>
+     			</property>
+     		</bean>
+     		<!-- 配置FastJson的消息转换器(默认yyyy-MM-dd HH:mm:ss格式),或可使用@JSONField来控制,如果2个都配置了,则注解优先
+     		     features:指定输出时的日期转换器为WriteDateUseDateFormat -->
+     		<bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+    			<property name="supportedMediaTypes">
+    				<list>
+    					<value>text/html;charset=UTF-8</value>
+    					<value>application/json;charset=UTF-8</value>
+    				</list>
+    			</property>
+    			<property name="features">
+    				<list>
+    				   <!-- Date的日期转换器 -->
+    					<value>WriteDateUseDateFormat</value>
+    				</list>
+    			</property>
+    		</bean>
+     	</mvc:message-converters>
+     </mvc:annotation-driven>
+    
+     <!-- 配置静态文件不能访问问题 -->
+     <mvc:default-servlet-handler/>
+     
+     <!--3 视图解析器 -->
+    <!--  <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+     	<property name="prefix" value="/WEB-INF/"/>
+     	<property name="suffix" value=".jsp"/>
+     </bean> --> 
+     
+     <!--3 配置多视图解析器：允许同样的内容数据呈现不同的view
+     favorParameter-默认为true，表示支持参数匹配，可以根据请求参数的值确定MIME类型，默认的请求参数为format，如： /user/view?id=12&format=json
+     mediaTypes-根据请求参数值和MIME类型的映射列表   
+     viewResolvers-网页视图解析器
+      -->
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="favorParameter" value="true"/>
+		<property name="defaultContentType" value="text/html"/>
+		<property name="mediaTypes">
+			<map>
+				<entry key="html" value="text/html;charset=UTF-8"/>
+				<entry key="json" value="application/json;charset=UTF-8"/>
+				<entry key="xml" value="application/xml;charset=UTF-8"/>
+			</map>
+		</property>
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" >
+					<property name="prefix" value="/WEB-INF/jsp"/>
+					<property name="suffix" value=".jsp"/>
+				</bean>		
+			</list>
+		</property>
+	</bean>
+     
+     <!-- 4 自定义转换器 -->
+     
+     <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+     	<property name="converters">
+     		<!-- 注入转换器类 -->
+     		<list>
+     			<bean class="com.bdqn.pms.web.converter.DateConverter"/>
+     		</list>
+     	</property>
+     </bean>
+     
+     <!--  全局异常处理
+     	key:定义的异常类型
+     	值:逻辑视图名
+      -->
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop key="com.bdqn.pms.web.commons.PMSException">error</prop>
+				<prop key="java.lang.RuntimeException">error</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- 配置文件上传，如果没有使用文件上传可以不用配置，当然如果不配，那么配置文件中也不必引入上传组件包 -->  
+    <bean id="multipartResolver"    
+        class="org.springframework.web.multipart.commons.CommonsMultipartResolver">    
+        <!-- 默认编码 -->  
+        <property name="defaultEncoding" value="utf-8" />    
+        <!-- 文件大小最大值 -->  
+        <property name="maxUploadSize" value="10485760000" />    
+        <!-- 内存中的最大值 -->  
+        <property name="maxInMemorySize" value="40960" />    
+    </bean> 
+</beans>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bdqn.pms.web.dao.clea.plantset.PlantSetDao">
+
+	<!-- <select id="getAllField">
+		SELECT GROUP_CONCAT(COLUMN_NAME) FROM information_schema.COLUMNS WHERE table_name = 'smbms_proviter' AND table_schema ="supermarketmanager";
+	
+	</select> -->
+	
+	
+	<resultMap type="PlantSet" id="plantSetMap">
+		<id property="plantset_id" column="plantset_id"/>
+		<association property="landdevCompany" column="plantset_companyId" select="com.bdqn.pms.web.dao.hsmm.landdevCompany.LanddevCompanyMapper.getCompanyById"/>
+		<collection property="plantset_types" column="plantset_types" select="com.bdqn.pms.web.dao.clea.plant.PlantDao.plantSeted"/>
+	</resultMap>
+	
+	
+	
+	<select id="getAll" resultMap="plantSetMap">
+		select * from db_pms_plantset where plantset_del=0
+		<trim prefix="limit">
+			<choose>
+				<when test="page!=null">
+					#{page.startrow},#{page.pagesize}
+				</when>
+			</choose>
+		</trim>
+		
+	</select>
+	
+	
+	<select id="getByNo" resultMap="plantSetMap">
+		select * from db_pms_plantset
+		where plantset_del = 0 and
+		plantset_no = #{plantset_no}
+	</select>
+	
+	
+	<select id="getBySearch" parameterType="map" resultMap="plantSetMap">
+		select * from db_pms_plantset
+		<trim prefix="where" suffixOverrides="and">
+			plantset_del = 0 and
+			<if test="searchMap!=null">
+				<foreach collection="searchMap" item="value" index="key" separator="and">
+					<choose>
+						<when test="key!=null and key!=''and key=='ldcName'">
+							plantset_companyId
+							in
+							(select ldcId from tb_landdevcompany where ${key} like '%${value}%')
+						</when>
+						<otherwise>
+							${key} like '%${value}%'
+						</otherwise>
+					</choose>
+				</foreach>
+			</if>
+			
+		</trim>
+		order by plantset_addDate desc limit #{page.startrow},#{page.pagesize}
+	</select>
+	
+	
+	<select id="checkNo" resultType="Integer">
+		select count(1) 
+		from db_pms_plantset
+		where plantset_no = #{plantNo}
+	</select>
+	
+	
+	<select id="getPsByChoice" resultMap="plantSetMap">
+		select * from db_pms_plantset 
+		<trim prefix="where" suffixOverrides="and">
+			plantset_del = 0 and
+			<if test="choiceMap!=null and choiceMap.size>0">
+				<foreach collection="choiceMap" index="key" item="value">
+					${key}=#{value}
+				</foreach>
+			</if>
+		</trim>
+	
+	</select>
+	
+	<select id="getTotalrecord" resultType="Long">
+		select count(1) from db_pms_plantset
+		<trim prefix="where" suffixOverrides="and">
+			plantset_del = 0 and
+			<if test="searchMap!=null">
+				<foreach collection="searchMap" item="value" index="key" separator="and">
+					<choose>
+						<when test="key!=null and key!=''and key=='ldcName'">
+							plantset_companyId
+							in
+							(select ldcId from tb_landdevcompany where ${key} like '%${value}%')
+						</when>
+						<otherwise>
+							${key} like '%${value}%'
+						</otherwise>
+					</choose>
+				</foreach>
+			</if>
+		</trim>	
+	</select>
+	
+	
+	<insert id="addPlantSet" parameterType="PlantSet">
+		insert into
+		db_pms_plantset	(
+		plantset_no,
+		plantset_area,
+		plantset_name,
+		plantset_place,
+		plantset_charge,
+		plantset_companyId,
+		plantset_types,
+		plantset_remark,
+		plantset_date
+		)
+		values(
+		#{plantset_no},
+		#{plantset_area},
+		#{plantset_name},
+		#{plantset_place},
+		#{plantset_charge},
+		#{landdevCompany.ldcId},
+		<choose>
+			<when test="plantset_types!=null and plantset_types.size()>0">
+				replace(<foreach  collection="plantset_types" item="plant" separator="," open="'" close="'">${plant.plant_id}</foreach>,' ',''),
+			</when>
+			<otherwise>
+				'',
+			</otherwise>
+		</choose>
+		#{plantset_remark},
+		#{plantset_date}
+		)
+		
+	</insert>
+	
+	<update id="updatePlantSet" parameterType="PlantSet">
+		update db_pms_plantset
+		
+		set
+
+		plantset_name = #{plantset_name} ,
+
+		plantset_area =#{plantset_area} ,
+
+		plantset_place =#{plantset_place} ,
+
+		plantset_charge =#{plantset_charge} ,
+	
+		plantset_companyId =#{landdevCompany.ldcId} ,
+	
+		plantset_remark =#{plantset_remark} ,
+	
+		<choose>
+			<when test="plantset_types!=null and plantset_types.size()>0">
+				plantset_types = 
+				replace(<foreach  collection="plantset_types" item="plant" separator="," open="'" close="'">${plant.plant_id}</foreach>,' ',''),
+			</when>
+			<otherwise>
+				plantset_types = '',
+			</otherwise>
+		</choose>
+		plantset_date = #{plantset_date}
+			
+		where plantset_no = #{plantset_no}
+	</update>
+	
+	<!-- 删除绿化设置 -->
+	<update id="delPlantSet">
+		update db_pms_plantset
+		set
+		plantset_del=1
+		where plantset_no in 
+		<foreach collection="plantSetNo" item="no" open="(" close=")" separator=",">
+			#{no}
+		</foreach>
+	</update>
+
+	
+</mapper>

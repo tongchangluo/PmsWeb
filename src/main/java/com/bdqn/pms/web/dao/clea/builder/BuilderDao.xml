@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 命名空间(唯一) -->
+<mapper namespace="com.bdqn.pms.web.dao.clea.builder.BuilderDao">
+
+	<!-- 查询房产下所有楼盘 -->
+	<select id="getbldName" resultType="Builder">
+		SELECT * FROM tb_builder WHERE rsdcId = #{rsdcId}
+	</select>
+	
+</mapper>

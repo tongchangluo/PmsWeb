@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bdqn.pms.web.dao.clea.plantcheck.PlantCheckDao">
+	
+	
+	<resultMap type="PlantCheck" id="plantckMap">
+		<association property="landdevCompany" column="plantck_companyId" select="com.bdqn.pms.web.dao.hsmm.landdevCompany.LanddevCompanyMapper.getCompanyById"/>
+		<association property="plantSet" column="plantck_ptSetno" select="com.bdqn.pms.web.dao.clea.plantset.PlantSetDao.getByNo"/>
+	</resultMap>
+	
+	<!-- <select id="getAll" resultMap="plantckMap">
+		select * from db_pms_plantck where plantck_del=0
+	</select> -->
+	
+	
+	<select id="getBySearch" parameterType="java.util.Map" resultMap="plantckMap">
+		select * from db_pms_plantck
+		<trim prefix="where" suffixOverrides="and">
+			plantck_del=0 and
+			<if test="searchMap!=null">
+				<foreach collection="searchMap" item="value" index="key" separator="and">
+					<choose>
+						<when test="key=='ldcName'">
+							plantck_companyId
+							in
+							(select ldcId from tb_landdevcompany where ${key} like '%${value}%')
+						</when>
+						<when test="key=='plantset_no' or key=='plantset_name'">
+							plantck_ptSetno
+							in
+							(select plantset_no from db_pms_plantset where ${key} like '%${value}%')
+						</when>
+						<otherwise>
+							<if test="key!=null and key!=''">
+								${key} like '%${value}%'
+							</if>
+						</otherwise>
+						
+					</choose>
+				</foreach>
+			</if>
+			
+			
+		</trim>
+		order by plantck_addDate desc limit #{page.startrow},#{page.pagesize}
+	</select>
+	
+	
+	<select id="getTotalrecord" resultType="Long">
+		select count(1) from db_pms_plantck
+		<trim prefix="where" suffixOverrides="and">
+			plantck_del=0 and
+			<if test="searchMap!=null">
+				<foreach collection="searchMap" item="value" index="key" separator="and">
+					<choose>
+						<when test="key=='ldcName'">
+							plantck_companyId
+							in
+							(select ldcId from tb_landdevcompany where ${key} like '%${value}%')
+						</when>
+						<when test="key=='plantset_no' or key=='plantset_name'">
+							plantck_ptSetno
+							in
+							(select plantset_no from db_pms_plantset where ${key} like '%${value}%')
+						</when>
+						<otherwise>
+							<if test="key!=null and key!=''">
+								${key} like '%${value}%'
+							</if>
+						</otherwise>
+						
+					</choose>
+				</foreach>
+			</if>
+		</trim>	
+	</select>
+	
+	
+	<select id="getById" resultMap="plantckMap">
+		select * from db_pms_plantck where plantck_id=#{id} and plantck_del=0
+
+	</select>
+	
+	<insert id="addPlantCheck" parameterType="PlantCheck">
+		insert into
+		db_pms_plantck (
+		plantck_ptSetno,
+		plantck_date,
+		plantck_rummager,
+		plantck_summary,
+		plantck_situation,
+		plantck_companyId,
+		plantck_remark)
+		values (
+		#{plantSet.plantset_no},
+		#{plantck_date},
+		#{plantck_rummager},
+		#{plantck_summary},
+		#{plantck_situation},
+		#{landdevCompany.ldcId},
+		#{plantck_remark})
+		
+	</insert>
+	
+	<update id="updatePlantCheck" parameterType="PlantCheck">
+		update db_pms_plantck
+		set
+		plantck_date=#{plantck_date},
+		plantck_rummager=#{plantck_rummager},
+		plantck_summary=#{plantck_summary},
+		plantck_situation=#{plantck_situation},
+		plantck_remark=#{plantck_remark}
+		where plantck_id = #{plantck_id}
+	</update>
+	
+	<update id="delPlantCheck">
+		update db_pms_plantck
+		set
+		plantck_del = 1
+		where plantck_id in 
+		<foreach collection="idList" item="id" open="(" close=")" separator=",">
+			#{id}
+		</foreach>
+	</update>
+	
+	<update id="delPcByPlantSet">
+		update db_pms_plantck
+		set
+		plantck_del = 1
+		where plantck_ptSetno in 
+		<foreach collection="noList" item="no" open="(" close=")" separator=",">
+			#{no}
+		</foreach>
+	
+	</update>
+</mapper>

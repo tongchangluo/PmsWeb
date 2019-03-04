@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bdqn.pms.web.dao.clea.bldproperty.BldpropertyDao">
+
+	<!-- 查询某一个楼盘属性信息 -->
+	<select id="getBldpropertyById" resultType="bldproperty" >
+		SELECT * FROM  db_pms_bldproperty WHERE bldId = #{id}
+	</select>
+	
+	<!-- 更新一条楼盘属性信息 -->
+	<update id="modifyBldproperty" parameterType="bldProperty">
+		UPDATE db_pms_bldproperty SET 
+				type = #{type},
+				lift = #{lift},
+				shydropower = #{shydropower},
+				floors = #{floors},
+				washfloors = #{washfloors},
+				sungreenbelt = #{sungreenbelt},
+				sgreenbelt = #{sgreenbelt},
+				artificlake = #{artificlake},
+				hardground = #{hardground},
+				mirror = #{mirror},
+				louver = #{louver},
+				elevatorcar = #{elevatorcar},
+				elevatordoor = #{elevatordoor},
+				eletricwelldoor = #{eletricwelldoor},
+				welldoor = #{welldoor},
+				firehydrant = #{firehydrant},
+				accessdoor = #{accessdoor},
+				celldoor = #{celldoor},
+				corridorarea = #{corridorarea}
+				<!-- addDate = #{addDate} -->
+		WHERE  id = #{id}
+	</update>
+	
+	
+	<!-- 增加一条楼盘属性信息 -->
+	<insert id="addBldproperty" parameterType="bldProperty" >
+		INSERT INTO db_pms_bldproperty (
+				type ,lift ,shydropower ,
+				floors ,washfloors ,sungreenbelt ,
+				sgreenbelt ,artificlake ,hardground ,
+				mirror ,louver ,elevatorcar ,
+				elevatordoor ,eletricwelldoor ,welldoor ,
+				firehydrant ,accessdoor ,celldoor ,
+				corridorarea,bldId,addDate) 
+		value (
+				#{type},#{lift},#{shydropower},      
+				#{floors},#{washfloors},#{sungreenbelt},     
+				#{sgreenbelt},#{artificlake},#{hardground},       
+				#{mirror},#{louver},#{elevatorcar},      
+				#{elevatordoor},#{eletricwelldoor},#{welldoor},         
+				#{firehydrant},#{accessdoor},#{celldoor},       
+				#{corridorarea},#{bldId},#{addDate}) 
+	</insert>
+	
+	<!-- 更新一条房产的化粪池、路灯信息 -->
+	<update id="updateProperty" parameterType="bldProperty">
+		UPDATE db_pms_bldproperty SET 
+			cesspool = #{cesspool},
+			streetlight = #{streetlight}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 增加一条房产的化粪池、路灯信息 -->
+	<insert id="addProperty" parameterType="bldProperty">
+		INSERT INTO db_pms_bldproperty 
+			(cesspool,streetlight,rsdcId,addDate) 
+		VALUE
+			(#{cesspool},#{streetlight},#{rsdcId},#{addDate})
+	</insert>
+	
+	<!-- 查询一条房产的化粪池、路灯信息 -->
+	<select id="getProperty" resultType="bldProperty">
+		SELECT cesspool,streetlight,id,rsdcId
+			FROM db_pms_bldproperty 
+		WHERE rsdcId = #{rsdcId}
+	</select>
+	
+</mapper>
+				
+				
